@@ -72,26 +72,29 @@ module notchCutout() {
 }
 
 module turn(r, alpha, entry=false, extra=false) {
+    r_inner = r - laneWidth/2;
+    r_outer = r + laneWidth/2;
+    
     difference() {
         linear_extrude(streetHeight) {
-            arc(2*r, 2*(r+laneWidth), 0, alpha);
+            arc(2*r_inner, 2*r_outer, 0, alpha);
         };
         translate([0, 0, streetHeight-magnetHeight]) linear_extrude(magnetHeight+1) {
-            turnTrack(r + laneWidth / 2, alpha);
+            turnTrack(r, alpha);
             if (entry) {
-                turnTrackExtraEntry(r + laneWidth / 2, trackExtraOffset, alpha);
+                turnTrackExtraEntry(r, trackExtraOffset, alpha);
             }
             if (extra) {
-                turnTrack(r + laneWidth/2 + trackExtraOffset, alpha);
+                turnTrack(r + trackExtraOffset, alpha);
             }
         };
         translate([0, 0, -1]) linear_extrude(streetHeight+2) {
-            translate([r + laneWidth/2, 0]) notchCutout();
+            translate([r, 0]) notchCutout();
         }
         
         translate([0, 0, -1]) linear_extrude(streetHeight+2) {
             rotate([0, 0, alpha])
-                translate([r + laneWidth/2, 0]) mirror([0, 1, 0]) notchCutout();
+                translate([r, 0]) mirror([0, 1, 0]) notchCutout();
         }
     };
 }
@@ -119,17 +122,46 @@ module straight(length, extra=false) {
     }
 }
 
-module doubleStraight(length, extra=False) {
+module doubleStraight(length, extra=false) {
     union() {
-        straight(150, extra=true);
-        translate([laneWidth, 0, 0]) straight(150, extra=true);
+        straight(length, extra=extra);
+        translate([laneWidth, 0, 0]) straight(length, extra=extra);
     };
 }
 
 
-rotate([0, 0, 30]) mirror([0,1,0]) turn(250, 30, entry=true, extra=false);
-straight(150, extra=true);
-translate([laneWidth + 10, 0, 0]) doubleStraight(150, extra=true);
+straightLenghts = [203, 101.5, 52];
+
+for (i = [0:len(straightLenghts)-1]) {
+    length = straightLenghts[i];
+    translate([0, 220*i, 0]) rotate([0, 0, 90]) {
+        straight(length, extra=true);
+        translate([laneWidth + 10, 0, 0]) doubleStraight(length);
+    }
+}
+
+turnRadii = [385, 333, 281, 229, 177, 125];
+turnAngles = [45, 30, 15];
+turnModes = [0, 1, 2, 3];
+
+for (i = [0:len(turnRadii)-1], j=[0:len(turnAngles)-1], k=[0:len(turnModes)-1]) {
+    r = turnRadii[i];
+    a = turnAngles[j];
+    mode = turnModes[k];
+    
+    entry = mode == 1 || mode == 3;
+    extra = mode == 2;
+    mir = mode == 3;
+
+    translate([-10 * i + k * 500, 300*j, 0]) {
+        if (mir) {
+            rotate([0, 0, a]) mirror([0,1,0]) turn(r, a, entry=entry, extra=extra);
+        } else {
+            turn(r, a, entry=entry, extra=extra);
+        }
+    }
+}
+
 
 //notchCutout();
 /*
