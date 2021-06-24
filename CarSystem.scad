@@ -56,15 +56,19 @@ module roundedCorner(r) {
 }
 
 module notch() {
-    translate([0, 12.5, 0]) circle(r=8);
-    translate([0, 5, 0]) square([10, 10], center=true);
+    union() {
+        translate([0, 12.5, 0]) circle(r=8);
+        translate([0, 5, 0]) square([10, 10], center=true);
+    }
 }
 
 module notchCutout() {
-    notch();
-    translate([5, 0, 0]) roundedCorner(2.5);
-    translate([-5, 0, 0]) mirror([1, 0, 0]) roundedCorner(2.5);
-    translate([0, -0.5, 0]) square([15, 1], center=true);
+    union() {
+        notch();
+        translate([5, 0, 0]) roundedCorner(2.5);
+        translate([-5, 0, 0]) mirror([1, 0, 0]) roundedCorner(2.5);
+        translate([0, -0.5, 0]) square([15, 1], center=true);
+    }
 }
 
 module turn(r, alpha, entry=false, extra=false) {
@@ -115,9 +119,17 @@ module straight(length, extra=false) {
     }
 }
 
+module doubleStraight(length, extra=False) {
+    union() {
+        straight(150, extra=true);
+        translate([laneWidth, 0, 0]) straight(150, extra=true);
+    };
+}
+
 
 rotate([0, 0, 30]) mirror([0,1,0]) turn(250, 30, entry=true, extra=false);
 straight(150, extra=true);
+translate([laneWidth + 10, 0, 0]) doubleStraight(150, extra=true);
 
 //notchCutout();
 /*
@@ -171,6 +183,5 @@ beta = asin((2 * r *sin(alpha)*(r * cos(alpha) - (r + b)) / (? * cos(alpha)-??)
 x = -(b*(r*2+b)) / (2 * r * cos(alpha) - (2*r + 2*b)
 s = (r*(r+b)*2*cos(alpha) - r*(r+b)*2+b^2) / (2 * r * cos(alpha) - (2*r + 2*b)
 beta = asin((2 * r *sin(alpha)*(r * cos(alpha) - (r + b)) /  (r*(r+b)*2*cos(alpha) - r*(r+b)*2+b^2)
-
 
 */
