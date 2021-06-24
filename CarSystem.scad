@@ -44,6 +44,10 @@ module turnTrack(r, alpha) {
     arc(2*(r-magnetWidth/2), 2*(r+magnetWidth/2), -1, alpha+1);
 }
 
+module straightTrack(length) {
+    translate([-magnetWidth/2, 0, 0]) square([magnetWidth, length]);
+}
+
 module roundedCorner(r) {
     difference() {
         translate([0, 0, 0]) square([r, r]);
@@ -86,11 +90,34 @@ module turn(r, alpha, entry=false, extra=false) {
                 translate([r + laneWidth/2, 0]) mirror([0, 1, 0]) notchCutout();
         }
     };
-    
+}
+
+module straight(length, extra=false) {
+    difference() {
+        linear_extrude(streetHeight) {
+            square([laneWidth, length]);
+        };
+        translate([laneWidth/2, 0, streetHeight-magnetHeight]) linear_extrude(magnetHeight+1) {
+            straightTrack(length);
+        }
+        if (extra) {
+            translate([laneWidth/2 + trackExtraOffset, 0, streetHeight-magnetHeight]) 
+                linear_extrude(magnetHeight+1) {
+                straightTrack(length);
+            }
+        }
+        translate([0, 0, -1]) linear_extrude(streetHeight+2) {
+            translate([laneWidth/2, 0]) notchCutout();
+        }
+        translate([0, length, -1]) linear_extrude(streetHeight+2) {
+            translate([laneWidth/2, 0]) mirror([0, 1, 0]) notchCutout();
+        }
+    }
 }
 
 
 rotate([0, 0, 30]) mirror([0,1,0]) turn(250, 30, entry=true, extra=false);
+straight(150, extra=true);
 
 //notchCutout();
 /*
