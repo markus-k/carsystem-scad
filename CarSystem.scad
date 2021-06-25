@@ -57,7 +57,7 @@ module roundedCorner(r) {
 module notch(scale=1.0) {
     union() {
         translate([0, 12.5, 0]) circle(r=8*scale);
-        translate([0, 5, 0]) square([10, 10], center=true);
+        translate([0, 5, 0]) square([10*scale, 10], center=true);
     }
 }
 
@@ -128,38 +128,62 @@ module doubleStraight(length, extra=false) {
     };
 }
 
+module notchConnector() {
+    difference() {
+        linear_extrude(streetHeight) union() {
+            notch(0.98);
+            mirror([0, 1, 0]) notch(0.98);
+        };
+        translate([0, 0, streetHeight - magnetHeight * 0.5 + 0.5])
+            cube([magnetWidth, 50, magnetHeight + 1], center=true);
+        for (m=[0, 1]) {
+            mirror([0, m, 0]) translate([0, 0, streetHeight - magnetHeight])
+                linear_extrude(magnetHeight + 1) polygon([[0, 0], [4.5, 21], [-4.5, 21]]);
+        };
+    };
+}
+
 
 straightLenghts = [203, 101.5, 52];
-
-for (i = [0:len(straightLenghts)-1]) {
-    length = straightLenghts[i];
-    translate([0, 220*i, 0]) rotate([0, 0, 90]) {
-        straight(length, extra=true);
-        translate([laneWidth + 10, 0, 0]) doubleStraight(length);
-    }
-}
 
 turnRadii = [385, 333, 281, 229, 177, 125];
 turnAngles = [45, 30, 15];
 turnModes = [0, 1, 2, 3];
 
-for (i = [0:len(turnRadii)-1], j=[0:len(turnAngles)-1], k=[0:len(turnModes)-1]) {
-    r = turnRadii[i];
-    a = turnAngles[j];
-    mode = turnModes[k];
-    
-    entry = mode == 1 || mode == 3;
-    extra = mode == 2;
-    mir = mode == 3;
+showAll = false;
 
-    translate([-10 * i + k * 500, 300*j, 0]) {
-        if (mir) {
-            rotate([0, 0, a]) mirror([0,1,0]) turn(r, a, entry=entry, extra=extra);
-        } else {
-            turn(r, a, entry=entry, extra=extra);
+if (showAll) {
+    for (i = [0:len(straightLenghts)-1]) {
+        length = straightLenghts[i];
+        translate([0, 220*i, 0]) rotate([0, 0, 90]) {
+            straight(length, extra=true);
+            translate([laneWidth + 10, 0, 0]) doubleStraight(length);
+        }
+    }
+
+    for (i = [0:len(turnRadii)-1], j=[0:len(turnAngles)-1], k=[0:len(turnModes)-1]) {
+        r = turnRadii[i];
+        a = turnAngles[j];
+        mode = turnModes[k];
+        
+        entry = mode == 1 || mode == 3;
+        extra = mode == 2;
+        mir = mode == 3;
+
+        translate([-10 * i + k * 500, 300*j, 0]) {
+            if (mir) {
+                rotate([0, 0, a]) mirror([0,1,0]) turn(r, a, entry=entry, extra=extra);
+            } else {
+                turn(r, a, entry=entry, extra=extra);
+            }
         }
     }
 }
+
+notchConnector();
+
+turn(turnRadii[1], 30, entry=false, extra=false);
+//straight(straightLenghts[0], extra=false);
 
 
 //notchCutout();
