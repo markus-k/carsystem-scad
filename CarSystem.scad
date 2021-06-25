@@ -1,4 +1,4 @@
-$fa = 5;
+$fa = 1;
 $fs = 1;
 magnetWidth = 3.2;
 magnetHeight = 1.0;
@@ -27,7 +27,7 @@ module sector(d, a1, a2) {
 module arc(d1, d2, a1, a2) {
     difference() {
         sector(d2, a1, a2);
-        sector(d1, a1 - 1, a2 + 1);
+        circle(d=d1);
     };
 }
 
@@ -36,7 +36,6 @@ module turnTrackExtraEntry(r, b, alpha) {
     s = (2 * r*(r+b)*cos(alpha) - (r*(r+b)*2+b^2)) / (2 * r * cos(alpha) - (2*r + 2*b));
     beta = asin((2 * r *sin(alpha)*(r * cos(alpha) - (r + b))) / (r*(r+b)*2*cos(alpha) - (r*(r+b)*2+b^2)));
     
-    //arc(2*(r-magnetWidth/2), 2*(r+magnetWidth/2), 0, alpha);
     translate([x, 0, 0]) arc(2*(s-magnetWidth/2), 2*(s+magnetWidth/2), -1, beta + 1);
 }
 
@@ -55,9 +54,9 @@ module roundedCorner(r) {
     }
 }
 
-module notch() {
+module notch(scale=1.0) {
     union() {
-        translate([0, 12.5, 0]) circle(r=8);
+        translate([0, 12.5, 0]) circle(r=8*scale);
         translate([0, 5, 0]) square([10, 10], center=true);
     }
 }
