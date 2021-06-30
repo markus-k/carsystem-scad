@@ -7,6 +7,9 @@ streetHeight = 2.0;
 
 trackExtraOffset = 11;
 
+switchOuter = 32;
+switchInner = 30;
+
 module sector(d, a1, a2) {
     if (a2 - a1 > 180) {
         difference() {
@@ -143,6 +146,107 @@ module notchConnector() {
     };
 }
 
+module switchCutout() {
+    topHeight = 1;
+    bottomHeight = streetHeight-topHeight;
+    union() {
+        translate([0, 0, -0.5]) cylinder(h=bottomHeight+1, d=switchInner);
+        translate([0, 0, bottomHeight]) cylinder(h=topHeight+1, d=switchOuter);
+    };
+}
+
+module intersectionA(r=150) {
+    l = r + laneWidth;
+
+    track_inner_r = r-25;
+    track_offset = (r + laneWidth/2) - track_inner_r;
+
+    difference() {
+        linear_extrude(streetHeight) difference() {
+            union() {
+                square([l, l]);
+                translate([l, l-laneWidth/2, 0]) rotate([0, 0, -90]) notch();
+            };
+            circle(r=r);
+            translate([0, l-laneWidth/2, 0]) rotate([0, 0, -90]) notchCutout();
+            translate([l-laneWidth/2, 0, 0]) notchCutout();
+            translate([l-laneWidth/2, l, 0]) rotate([0, 0, 180]) notchCutout();
+        };
+
+        translate([0, 0, streetHeight - magnetHeight]) linear_extrude(magnetHeight+1) {
+            translate([l/2, l - laneWidth/2, 0])
+              square([l+50, magnetWidth], center=true);
+            translate([l - laneWidth/2, l/2, 0])
+              square([magnetWidth, l+1], center=true);
+
+            translate([track_offset, track_offset, 0])
+              arc(2*(track_inner_r-magnetWidth/2), 2*(track_inner_r+magnetWidth/2), 0, 90);
+            translate([track_offset, track_offset, 0])
+              arc(2*(track_inner_r+laneWidth-magnetWidth/2), 2*(track_inner_r+laneWidth+magnetWidth/2), 0, 90);
+
+            translate([l+track_inner_r+laneWidth/2, track_offset, 0])
+              arc(2*(track_inner_r+laneWidth-magnetWidth/2), 2*(track_inner_r+laneWidth+magnetWidth/2), 0, -90);
+
+            translate([track_offset, l+track_inner_r+laneWidth/2, 0])
+              arc(2*(track_inner_r+laneWidth-magnetWidth/2), 2*(track_inner_r+laneWidth+magnetWidth/2), -90, 0);
+        };
+
+        translate([track_offset+switchInner, l-laneWidth/2]) switchCutout();
+   };
+}
+
+module intersectionB(r=150) {
+    l = r + laneWidth;
+    track_inner_r = r-25;
+    track_offset = (r + laneWidth/2) - track_inner_r;
+
+    difference() {
+        linear_extrude(streetHeight) difference() {
+            union() {
+                square([l, laneWidth]);
+                translate([laneWidth/2, laneWidth, 0]) rotate([0, 0, 0]) notch();
+            };
+
+            translate([0, laneWidth/2, 0]) rotate([0, 0, -90]) notchCutout();
+            translate([l, laneWidth/2, 0]) rotate([0, 0, 90]) notchCutout();
+        };
+
+        translate([0, 0, streetHeight - magnetHeight]) linear_extrude(magnetHeight+1) {
+            translate([l/2, laneWidth/2, 0])
+              square([l, magnetWidth], center=true);
+
+            translate([l-track_offset, track_inner_r +laneWidth+ laneWidth/2, 0]) 
+              arc(2*(track_inner_r+laneWidth-magnetWidth/2), 2*(track_inner_r+laneWidth+magnetWidth/2), -180, -90);
+        };
+    };
+}
+
+module intersectionC(r=150) {
+    l = r + laneWidth;
+    track_inner_r = r-25;
+    track_offset = (r + laneWidth/2) - track_inner_r;
+
+    difference() {
+        linear_extrude(streetHeight) difference() {
+            union() {
+                square([l, laneWidth]);
+                translate([l, laneWidth/2, 0]) rotate([0, 0, -90]) notch();
+            };
+
+            translate([0, laneWidth/2, 0]) rotate([0, 0, -90]) notchCutout();
+            translate([l-laneWidth/2, laneWidth, 0]) rotate([0, 0, 180]) notchCutout();
+        };
+
+        translate([0, 0, streetHeight - magnetHeight]) linear_extrude(magnetHeight+1) {
+            translate([l/2, laneWidth/2, 0]) square([l+50, magnetWidth], center=true);
+            translate([track_offset, track_inner_r +laneWidth+ laneWidth/2, 0])
+              arc(2*(track_inner_r+laneWidth-magnetWidth/2), 2*(track_inner_r+laneWidth+magnetWidth/2), -90, 0);
+        };
+
+        translate([track_offset+switchInner, laneWidth/2]) switchCutout();
+    };
+}
+
 
 straightLenghts = [203, 101.5, 52];
 
@@ -180,63 +284,15 @@ if (showAll) {
     }
 }
 
-notchConnector();
+//notchConnector();
 
-turn(turnRadii[1], 30, entry=false, extra=false);
+//turn(turnRadii[2], 30, entry=false, extra=false);
 //straight(straightLenghts[0], extra=false);
 
+intersectionA();
+//translate([202, 202+52+0, 0]) rotate([0, 0, 180]) intersectionB();
+//translate([202*2, 202+52+0, 0]) rotate([0, 0, 180]) intersectionC();
 
-//notchCutout();
-/*
-
-alpha=30
-r=100
-b = 10
-
-
-s = cos(beta) * s + (r - cos(alpha) * r)
-
-cos(beta) * s + x = cos(alpha) * r
-x = cos(alpha) * r - cos(beta) * s
-
-sin(alpha) * r = sin(beta) * s
-beta = asin((sin(alpha) * r) / s)
-
-x + s = r + b
-s = (r + b) - x
-
-alpha=30°;
-r=100; 
-b = 10; 
-
-beta = asin((sin(alpha) * r) / s); 
-x = cos(alpha) * r - cos(beta) * s; 
-s = (r + b) - x
-
-
-beta = asin((sin(alpha) * r) / s); 
-s = (r + b) - (cos(alpha) * r - cos(beta) * s) 
-
-
-sin(beta) * s = sin(alpha) * r)
-cos(beta) * s + x = cos(alpha) * r
-x + s = r + b | *-1
--x - s = -r - b
-
-sin(beta) * s = sin(alpha) * r)
-cos(beta) * s + x = cos(alpha) * r | +(-x - s = -r - b)
-cos(beta) * s - s = cos(alpha) - r - b
-
-
-
-
-
-s = (?*cos(alpha) - ??) / (2 * r * cos(alpha) - ????)
-beta = asin((2 * r *sin(alpha)*(r * cos(alpha) - (r + b)) / (? * cos(alpha)-??)
-
-
-x = -(b*(r*2+b)) / (2 * r * cos(alpha) - (2*r + 2*b)
-s = (r*(r+b)*2*cos(alpha) - r*(r+b)*2+b^2) / (2 * r * cos(alpha) - (2*r + 2*b)
-beta = asin((2 * r *sin(alpha)*(r * cos(alpha) - (r + b)) /  (r*(r+b)*2*cos(alpha) - r*(r+b)*2+b^2)
-
-*/
+//translate([202*2, 0, 0]) rotate([0, 0, 90]) intersectionA();
+//translate([0, 202*2, 0]) rotate([0, 0, 270]) intersectionA();
+//translate([202*2, 202*2, 0]) rotate([0, 0, 180]) intersectionA();
