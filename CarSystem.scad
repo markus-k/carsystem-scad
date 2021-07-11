@@ -2,6 +2,7 @@ $fa = 1;
 $fs = 1;
 magnetWidth = 3.2;
 magnetHeight = 1.0;
+magnetHole = 4.0;
 laneWidth = 52;
 streetHeight = 2.0;
 
@@ -60,7 +61,10 @@ module roundedCorner(r) {
 module notch(scale=1.0) {
     union() {
         translate([0, 12.5, 0]) circle(r=8*scale);
-        translate([0, 5, 0]) square([10*scale, 10], center=true);
+        difference() {
+            translate([0, 5, 0]) square([10*scale, 10], center=true);
+            translate([0, 12.5, 0]) circle(r=8*scale);
+        };
     }
 }
 
@@ -73,7 +77,7 @@ module notchCutout() {
     }
 }
 
-module turn(r, alpha, entry=false, extra=false) {
+module turn(r, alpha, entry=false, exit=false, extra=false) {
     r_inner = r - laneWidth/2;
     r_outer = r + laneWidth/2;
     
@@ -86,8 +90,13 @@ module turn(r, alpha, entry=false, extra=false) {
             if (entry) {
                 turnTrackExtraEntry(r, trackExtraOffset, alpha);
             }
+            if (exit) {
+                rotate([0, 0, alpha]) mirror([0, 1, 0])
+                turnTrackExtraEntry(r, trackExtraOffset, alpha);
+            }
             if (extra) {
                 turnTrack(r + trackExtraOffset, alpha);
+                
             }
         };
         translate([0, 0, -1]) linear_extrude(streetHeight+2) {
@@ -99,6 +108,7 @@ module turn(r, alpha, entry=false, extra=false) {
                 translate([r, 0]) mirror([0, 1, 0]) notchCutout();
         }
     };
+    
 }
 
 module straight(length, extra=false) {
@@ -185,13 +195,24 @@ module intersectionA(r=150) {
               arc(2*(track_inner_r+laneWidth-magnetWidth/2), 2*(track_inner_r+laneWidth+magnetWidth/2), 0, 90);
 
             translate([l+track_inner_r+laneWidth/2, track_offset, 0])
-              arc(2*(track_inner_r+laneWidth-magnetWidth/2), 2*(track_inner_r+laneWidth+magnetWidth/2), 0, -90);
+              arc(2*(track_inner_r+laneWidth-magnetWidth/2), 2*(track_inner_r+laneWidth+magnetWidth/2), 0, 270);
 
             translate([track_offset, l+track_inner_r+laneWidth/2, 0])
-              arc(2*(track_inner_r+laneWidth-magnetWidth/2), 2*(track_inner_r+laneWidth+magnetWidth/2), -90, 0);
+              arc(2*(track_inner_r+laneWidth-magnetWidth/2), 2*(track_inner_r+laneWidth+magnetWidth/2), 270, 360);
         };
+        
+        arc_pos = [track_offset, track_offset];
+        arc2_pos = [track_offset, l+track_inner_r+laneWidth/2];
+        switch_pos = [track_offset+switchOuter, l-laneWidth/2];
 
-        translate([track_offset+switchInner, l-laneWidth/2]) switchCutout();
+        pts = circleIntersection(arc_pos, switch_pos, track_inner_r, switchOuter/2);
+        pts2 = circleIntersection(arc2_pos, switch_pos, track_inner_r+laneWidth, switchOuter/2);
+
+        translate(switch_pos) switchCutout();
+        
+        translate([track_offset+switchOuter+switchOuter*0.5, l-laneWidth/2, -0.5]) cylinder(h=streetHeight + 1, d=magnetHole);
+        translate([pts[0][0], pts[0][1], -0.5]) cylinder(h=streetHeight + 1, d=magnetHole);
+        translate([pts2[1][0], pts2[1][1], -0.5]) cylinder(h=streetHeight + 1, d=magnetHole);
    };
 }
 
@@ -216,15 +237,27 @@ module intersectionB(r=150) {
               square([l, magnetWidth], center=true);
 
             translate([l-track_offset, track_inner_r +laneWidth+ laneWidth/2, 0]) 
-              arc(2*(track_inner_r+laneWidth-magnetWidth/2), 2*(track_inner_r+laneWidth+magnetWidth/2), -180, -90);
+              arc(2*(track_inner_r+laneWidth-magnetWidth/2), 2*(track_inner_r+laneWidth+magnetWidth/2), 180, 270);
         };
     };
 }
+
+function distance(P0, P1) = 
+    sqrt(pow(P0[0] - P1[0], 2) + pow(P0[1] - P1[1], 2));
+
+function circleIntersection(P0, P1, r0, r1) = 
+    let (d = distance(P0, P1))
+    let (a = (r0*r0 - r1*r1 + d*d) / (2*d))
+    let (h = sqrt(r0*r0 - a*a))
+    let (P2 = P0 + a * (P1 - P0) / d)
+        [[P2[0] + h * (P1[1] - P0[1]) / d, P2[1] - h * (P1[0] - P0[0]) / d],
+         [P2[0] - h * (P1[1] - P0[1]) / d, P2[1] + h * (P1[0] - P0[0]) / d]];
 
 module intersectionC(r=150) {
     l = r + laneWidth;
     track_inner_r = r-25;
     track_offset = (r + laneWidth/2) - track_inner_r;
+    switch_offset = track_offset+switchInner;
 
     difference() {
         linear_extrude(streetHeight) difference() {
@@ -236,22 +269,31 @@ module intersectionC(r=150) {
             translate([0, laneWidth/2, 0]) rotate([0, 0, -90]) notchCutout();
             translate([l-laneWidth/2, laneWidth, 0]) rotate([0, 0, 180]) notchCutout();
         };
+        
+        arc_pos = [track_offset, track_inner_r +laneWidth+ laneWidth/2];
 
         translate([0, 0, streetHeight - magnetHeight]) linear_extrude(magnetHeight+1) {
             translate([l/2, laneWidth/2, 0]) square([l+50, magnetWidth], center=true);
-            translate([track_offset, track_inner_r +laneWidth+ laneWidth/2, 0])
-              arc(2*(track_inner_r+laneWidth-magnetWidth/2), 2*(track_inner_r+laneWidth+magnetWidth/2), -90, 0);
+            translate(arc_pos)
+              arc(2*(track_inner_r+laneWidth-magnetWidth/2), 2*(track_inner_r+laneWidth+magnetWidth/2), 270, 360);
         };
+        
+        switch_pos = [switch_offset, laneWidth/2];
+        
+        pts = circleIntersection(arc_pos, switch_pos, track_inner_r+laneWidth, switchOuter/2);
 
-        translate([track_offset+switchInner, laneWidth/2]) switchCutout();
+        translate(switch_pos) switchCutout();
+        
+        translate([switch_offset+switchOuter*0.5, laneWidth/2, -0.5]) cylinder(h=streetHeight + 1, d=magnetHole);
+        translate([pts[1][0], pts[1][1], -0.5]) cylinder(h=streetHeight + 1, d=magnetHole);
     };
 }
 
 
-straightLenghts = [203, 101.5, 52];
+straightLenghts = [202, 101.5, 52];
 
 turnRadii = [385, 333, 281, 229, 177, 125];
-turnAngles = [45, 30, 15];
+turnAngles = [/*45, */30/*, 15*/];
 turnModes = [0, 1, 2, 3];
 
 showAll = false;
@@ -270,24 +312,20 @@ if (showAll) {
         a = turnAngles[j];
         mode = turnModes[k];
         
-        entry = mode == 1 || mode == 3;
+        entry = mode == 1;
         extra = mode == 2;
-        mir = mode == 3;
+        exit = mode == 3;
 
         translate([-10 * i + k * 500, 300*j, 0]) {
-            if (mir) {
-                rotate([0, 0, a]) mirror([0,1,0]) turn(r, a, entry=entry, extra=extra);
-            } else {
-                turn(r, a, entry=entry, extra=extra);
-            }
+            turn(r, a, entry=entry, exit=exit, extra=extra);        
         }
     }
 }
 
 //notchConnector();
 
-//turn(turnRadii[2], 30, entry=false, extra=false);
-//straight(straightLenghts[0], extra=false);
+//turn(turnRadii[3], 30, entry=true, exit=true, extra=true);
+//straight(straightLenghts[2], extra=false);
 
 intersectionA();
 //translate([202, 202+52+0, 0]) rotate([0, 0, 180]) intersectionB();
