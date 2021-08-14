@@ -16,8 +16,10 @@ WIDTH = A3_HEIGHT
 HEIGHT = A3_WIDTH
 
 LANE_WIDTH = 52
-
+LINE_WIDTH = 2
 STREET_COLOR = (0.3, 0.3, 0.3)
+
+EXTRA_STREET = 20
 
 def deg2rad(deg):
     return deg * (math.pi / 180.0)
@@ -30,12 +32,12 @@ def turn(cr, radius):
     angle2 = deg2rad(30)  # in radians
 
     cr.set_source_rgb(*STREET_COLOR)
-    cr.set_line_width(LANE_WIDTH*2 + 10)
+    cr.set_line_width(LANE_WIDTH*2 + EXTRA_STREET)
     cr.arc(xc, yc, radius, angle1, angle2)
     cr.stroke()
 
     cr.set_source_rgb(1.0, 1.0, 1.0)
-    cr.set_line_width(2)
+    cr.set_line_width(LINE_WIDTH)
 
     for i in (-1, 1):
         cr.arc(xc, yc, radius + LANE_WIDTH * -i + 2 * i, 0, angle2)
@@ -54,11 +56,11 @@ def straight(cr, length):
     #cr.move_to(0,0)
     cr.set_line_width(0)
     cr.set_source_rgb(*STREET_COLOR)
-    cr.rectangle(x-5, y, LANE_WIDTH*2+10, length)
+    cr.rectangle(x - EXTRA_STREET / 2, y, LANE_WIDTH * 2 + EXTRA_STREET, length)
     cr.fill()
 
     cr.set_source_rgb(1.0, 1.0, 1.0)
-    cr.set_line_width(2)
+    cr.set_line_width(LINE_WIDTH)
     cr.move_to(x+2, y)
     cr.line_to(x+2, y+length)
     cr.stroke()
@@ -80,36 +82,33 @@ def intersection(cr):
     radius = 152
     length = 202
 
-    extra = 10
-
     #cr.move_to(0,0)
     cr.set_line_width(0)
     cr.set_source_rgb(*STREET_COLOR)
-    cr.rectangle(x, y - radius - LANE_WIDTH - extra/2, radius * 2, LANE_WIDTH*2 + extra)
+    cr.rectangle(x, y - radius - LANE_WIDTH - EXTRA_STREET / 2, radius * 2, LANE_WIDTH*2 + EXTRA_STREET)
     cr.fill()
 
     angle1 = math.pi / 2 + math.pi
     angle2 = 0
     cr.set_source_rgb(*STREET_COLOR)
-    cr.set_line_width(LANE_WIDTH*2 + extra)
+    cr.set_line_width(LANE_WIDTH*2 + EXTRA_STREET)
     cr.arc(x, y, radius, angle1, angle2)
     cr.stroke()
 
     angle1 = -math.pi
     angle2 = -math.pi / 2
     cr.set_source_rgb(*STREET_COLOR)
-    cr.set_line_width(LANE_WIDTH*2 + extra)
+    cr.set_line_width(LANE_WIDTH*2 + EXTRA_STREET)
     cr.arc(x+radius*2, y, radius, angle1, angle2)
     cr.stroke()
 
     # lines for straight part
     cr.set_source_rgb(1.0, 1.0, 1.0)
-    cr.set_line_width(2)
+    cr.set_line_width(LINE_WIDTH)
     cr.move_to(x, y - radius - LANE_WIDTH)
     cr.line_to(x + radius * 2, y - radius - LANE_WIDTH)
     cr.stroke()
 
-    # this one should be dashed ideally
     for i in range(0, (radius * 2) // 20, 2):
         cr.move_to(x + i * 20, y - radius - LANE_WIDTH + LANE_WIDTH * 2)
         cr.line_to(x + 20 + i * 20, y - radius - LANE_WIDTH + LANE_WIDTH * 2)
@@ -127,9 +126,17 @@ def intersection(cr):
     cr.arc(x + radius * 2, y, radius - LANE_WIDTH, -math.pi, -math.pi / 2)
     cr.stroke()
 
+    stop_line_offset = 25
+
     cr.move_to(x + radius, y)
-    cr.line_to(x + radius, y - radius + LANE_WIDTH + 25)
+    cr.line_to(x + radius, y - radius + LANE_WIDTH + stop_line_offset)
     cr.stroke()
+
+    cr.set_line_width(10)
+    cr.move_to(x + radius - LINE_WIDTH / 2, y - radius + LANE_WIDTH + stop_line_offset)
+    cr.line_to(x + radius + LANE_WIDTH + 20, y - radius + LANE_WIDTH + stop_line_offset)
+    cr.stroke()
+
 
 
 
