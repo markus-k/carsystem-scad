@@ -3,8 +3,9 @@ $fs = 1;
 magnetWidth = 3.2;
 magnetHeight = 1.0;
 magnetHole = 4.0;
+
 laneWidth = 52;
-streetHeight = 2.0;
+streetHeight = 3.0;
 
 trackExtraOffset = 11;
 
@@ -290,9 +291,14 @@ module intersectionC(r=150) {
 }
 
 
-straightLenghts = [202, 101.5, 52];
+straightLenghts = [202, 101, 2*laneWidth, laneWidth];
 
-turnRadii = [385, 333, 281, 229, 177, 125];
+//turnRadii = [385, 333, 281, 229, 177, 125];
+
+function turnRadii() = [
+        for (a = [3, 2, 1, 0, -1, -2]) straightLenghts[0] + laneWidth / 2 + a * laneWidth    
+];
+        
 turnAngles = [/*45, */30/*, 15*/];
 turnModes = [0, 1, 2, 3];
 
@@ -324,10 +330,15 @@ if (showAll) {
 
 //notchConnector();
 
-//turn(turnRadii[3], 30, entry=true, exit=true, extra=true);
+
+turn(turnRadii[3], 30, entry=true, exit=true, extra=true);
+
 //straight(straightLenghts[2], extra=false);
 
-intersectionA();
+//intersectionA(r=straightLenghts[0] - laneWidth); // length = r+laneWidth = 202
+
+
+
 //translate([202, 202+52+0, 0]) rotate([0, 0, 180]) intersectionB();
 //translate([202*2, 202+52+0, 0]) rotate([0, 0, 180]) intersectionC();
 
