@@ -1,3 +1,7 @@
 texture.pdf
 /export/
 /gen/
+*.step
+*.iges
+.venv
+*.stl

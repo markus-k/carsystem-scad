@@ -25,9 +25,9 @@ def deg2rad(deg):
     return deg * (math.pi / 180.0)
 
 
-def turn(cr, radius):
-    xc = -radius/2 - 20
-    yc = 50
+def turn(cr, radius, x_offset, y_offset):
+    xc = -radius/2 - 20 + x_offset
+    yc = y_offset
     angle1 = deg2rad(0)  # angles are specified
     angle2 = deg2rad(30)  # in radians
 
@@ -49,10 +49,7 @@ def turn(cr, radius):
 
 
 
-def straight(cr, length):
-    x = 25
-    y = 25
-
+def straight(cr, length, x, y):
     #cr.move_to(0,0)
     cr.set_line_width(0)
     cr.set_source_rgb(*STREET_COLOR)
@@ -79,7 +76,7 @@ def intersection(cr):
     x = 25
     y = 250
 
-    radius = 152
+    radius = 150
     length = 202
 
     #cr.move_to(0,0)
@@ -138,21 +135,41 @@ def intersection(cr):
     cr.stroke()
 
 
+size = "A3"
 
+if size == "A3":
+    with cairo.PDFSurface('texture.pdf', A3_HEIGHT * DPI, A3_WIDTH* DPI) as surface:
+        cr = cairo.Context(surface)
 
-with cairo.PDFSurface('texture.pdf', WIDTH * DPI, HEIGHT * DPI) as surface:
-    cr = cairo.Context(surface)
+        # set canvas scaling to mm
+        cr.scale(DPI/25.4, DPI/25.4)
 
-    # set canvas scaling to mm
-    cr.scale(DPI/25.4, DPI/25.4)
+        radius = 228 + LANE_WIDTH/2
+        turn(cr, radius, 5, 10)
+        turn(cr, radius, 235, 10)
+        turn(cr, radius, 115, 130)
+        cr.show_page()
 
-    radius = 229 + LANE_WIDTH/2
+        straight(cr, 202, 25, 25)
+        straight(cr, 104, 155, 25)
+        straight(cr, 104, 155, 135)
+        straight(cr, 202, 285, 25)
+        cr.show_page()
 
-    turn(cr, radius)
-    cr.show_page()
+        intersection(cr)
+        cr.show_page()
 
-    straight(cr, 202)
-    cr.show_page()
+elif size == "A4":
+    with cairo.PDFSurface('texture.pdf', A4_WIDTH * DPI, A4_HEIGHT * DPI) as surface:
+        cr = cairo.Context(surface)
 
-    intersection(cr)
-    cr.show_page()
+        # set canvas scaling to mm
+        cr.scale(DPI/25.4, DPI/25.4)
+
+        radius = 229 + LANE_WIDTH/2
+
+        turn(cr, radius, 0, 50)
+        cr.show_page()
+
+        straight(cr, 202, 25, 25)
+        cr.show_page()
